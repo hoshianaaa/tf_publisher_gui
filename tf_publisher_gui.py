@@ -25,13 +25,24 @@ class Window(QWidget):
 
         self.initUI()
     
+    def setLableValue(self):
+
+        global X,Y,Z
+        global EX,EY,EZ
+
+        self.angle_label[0].setText("X:" + str(round(X,2)))
+        self.angle_label[1].setText("Y:" + str(round(Y,2)))
+        self.angle_label[2].setText("Z:" + str(round(Z,2)))
+        self.angle_label[3].setText("EX:" + str(round(EX,2)))
+        self.angle_label[4].setText("EY:" + str(round(EY,2)))
+        self.angle_label[5].setText("EZ:" + str(round(EZ,2)))
+
     def initUI(self):
         
         self.angle_label = [QLabel() for x in range(6)]
 
-        for each_label in self.angle_label:
-            each_label.setText(str(0))
-
+        self.setLableValue()
+ 
         self.angle_slider = [QSlider(Qt.Orientation.Horizontal) for x in range(6)]
         
         for each_slider in self.angle_slider:
@@ -40,6 +51,13 @@ class Window(QWidget):
             each_slider.setValue(0)
             each_slider.valueChanged.connect(self.value_change)
         
+        self.angle_slider[0].setValue(int(X * 100))
+        self.angle_slider[1].setValue(int(Y * 100))
+        self.angle_slider[2].setValue(int(Z * 100))
+        self.angle_slider[3].setValue(int(EX * 100 / math.pi))
+        self.angle_slider[4].setValue(int(EY * 100 / math.pi))
+        self.angle_slider[5].setValue(int(EZ * 100 / math.pi))
+
         servo_frame = [QFrame() for x in range(6)]
         servo_layout = [QHBoxLayout() for x in range(6)]
 
@@ -60,13 +78,6 @@ class Window(QWidget):
         global X,Y,Z
         global EX,EY,EZ
 
-        self.angle_label[0].setText("X:" + str(self.angle_slider[0].value()/100.0))
-        self.angle_label[1].setText("Y:" + str(self.angle_slider[1].value()/100.0))
-        self.angle_label[2].setText("Z:" + str(self.angle_slider[2].value()/100.0))
-        self.angle_label[3].setText("EX:" + str(round(self.angle_slider[3].value()/100.0*math.pi,2)))
-        self.angle_label[4].setText("EY:" + str(round(self.angle_slider[4].value()/100.0*math.pi,2)))
-        self.angle_label[5].setText("EZ:" + str(round(self.angle_slider[5].value()/100.0*math.pi,2)))
-
         X = self.angle_slider[0].value() / 100.0
         Y = self.angle_slider[1].value() / 100.0
         Z = self.angle_slider[2].value() / 100.0
@@ -74,27 +85,45 @@ class Window(QWidget):
         EY = self.angle_slider[4].value() / 100.0 * math.pi
         EZ = self.angle_slider[5].value() / 100.0 * math.pi
 
+        self.setLableValue()
 
-rospy.init_node('tf_publisher_gui')
-br = tf.TransformBroadcaster()
 
-args = sys.argv
-file_name = args[1]
-print(file_name)
-data, read_sucess = read_json_file(file_name)
-print(data)
+try:
 
-app = QApplication(sys.argv)
-ex =Window()
+  rospy.init_node('tf_publisher_gui')
+  br = tf.TransformBroadcaster()
 
-r = rospy.Rate(10)
-while not rospy.is_shutdown():
-    QApplication.processEvents()
+  args = sys.argv
+  file_name = args[1]
+  print(file_name)
+  data, read_sucess = read_json_file(file_name)
+  print(data)
 
-    br.sendTransform(( X, Y, Z),
-                     tf.transformations.quaternion_from_euler(EX, EY, EZ),
-                     rospy.Time.now(),
-                     "base_link",
-                     "world")
+  X = data["x"]
+  Y = data["y"]
+  Z = data["z"]
+  EX = data["ex"]
+  EY = data["ey"]
+  EZ = data["ez"]
 
-    r.sleep()
+  app = QApplication(sys.argv)
+  ex =Window()
+
+  r = rospy.Rate(10)
+  while not rospy.is_shutdown():
+      QApplication.processEvents()
+
+      br.sendTransform(( X, Y, Z),
+                       tf.transformations.quaternion_from_euler(EX, EY, EZ),
+                       rospy.Time.now(),
+                       "base_link",
+                       "world")
+
+      r.sleep()
+
+finally:
+
+  new_data = {'x': X, 'y': Y, 'z': Z, 'ex': EX, 'ey': EY, 'ez': EZ}
+  data.update(new_data)
+  write_json_file(file_name, new_data)
+
