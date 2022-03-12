@@ -4,6 +4,13 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
+import rospy
+import tf
+
+X = 0
+Y = 0
+Z = 0
+
 class Window(QWidget):
 
     def __init__(self):
@@ -16,14 +23,14 @@ class Window(QWidget):
         self.angle_label = [QLabel() for x in range(4)]
 
         for each_label in self.angle_label:
-            each_label.setText(str(90))
+            each_label.setText(str(0))
 
         self.angle_slider = [QSlider(Qt.Orientation.Horizontal) for x in range(4)]
         
         for each_slider in self.angle_slider:
-            each_slider.setMaximum(170)
-            each_slider.setMinimum(10)
-            each_slider.setValue(90)
+            each_slider.setMaximum(10)
+            each_slider.setMinimum(-10)
+            each_slider.setValue(0)
             each_slider.valueChanged.connect(self.value_change)
         
         servo_frame = [QFrame() for x in range(4)]
@@ -43,10 +50,29 @@ class Window(QWidget):
         self.show()
     
     def value_change(self):
+        global X,Y,Z
         for i in range(4):
             self.angle_label[i].setText(str(self.angle_slider[i].value()))
+
+        X = self.angle_slider[0].value()
+        Y = self.angle_slider[1].value()
+        Z = self.angle_slider[2].value()
+
+
+rospy.init_node('tf_publisher_gui')
+br = tf.TransformBroadcaster()
 
 app = QApplication(sys.argv)
 ex =Window()
 
-sys.exit(app.exec())
+r = rospy.Rate(10)
+while not rospy.is_shutdown():
+    QApplication.processEvents()
+
+    br.sendTransform(( X, Y, Z),
+                     tf.transformations.quaternion_from_euler(0, 0, 0),
+                     rospy.Time.now(),
+                     "base_link",
+                     "world")
+
+    r.sleep()
