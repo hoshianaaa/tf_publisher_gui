@@ -1,7 +1,5 @@
 # https://touch-sp.hatenablog.com/entry/2021/06/11/230615
 
-from json_read_write import *
-
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
@@ -10,6 +8,20 @@ import rospy
 import tf
 
 import math
+
+import json
+import os
+
+def read_json_file(file_name):
+  if os.path.exists(file_name):
+    with open(file_name, 'r') as f:
+      json_load = json.load(f)
+      return json_load, True
+  return None, False
+
+def write_json_file(file_name, dict_data):
+  with open(file_name, 'w') as f:
+    json.dump(dict_data, f, indent=2)
 
 X = 0.00
 Y = 0.00
