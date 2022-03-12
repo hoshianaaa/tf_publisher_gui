@@ -7,9 +7,11 @@ from PyQt5.QtWidgets import *
 import rospy
 import tf
 
-X = 0
-Y = 0
-Z = 0
+import math
+
+X = 0.00
+Y = 0.00
+Z = 0.00
 EX = 0
 EY = 0
 EZ = 0
@@ -31,8 +33,8 @@ class Window(QWidget):
         self.angle_slider = [QSlider(Qt.Orientation.Horizontal) for x in range(6)]
         
         for each_slider in self.angle_slider:
-            each_slider.setMaximum(10)
-            each_slider.setMinimum(-10)
+            each_slider.setMaximum(100)
+            each_slider.setMinimum(-100)
             each_slider.setValue(0)
             each_slider.valueChanged.connect(self.value_change)
         
@@ -55,15 +57,20 @@ class Window(QWidget):
     def value_change(self):
         global X,Y,Z
         global EX,EY,EZ
-        for i in range(6):
-            self.angle_label[i].setText(str(self.angle_slider[i].value()))
 
-        X = self.angle_slider[0].value()
-        Y = self.angle_slider[1].value()
-        Z = self.angle_slider[2].value()
-        EX = self.angle_slider[3].value()
-        EY = self.angle_slider[4].value()
-        EZ = self.angle_slider[5].value()
+        self.angle_label[0].setText("X:" + str(self.angle_slider[0].value()/100.0))
+        self.angle_label[1].setText("Y:" + str(self.angle_slider[1].value()/100.0))
+        self.angle_label[2].setText("Z:" + str(self.angle_slider[2].value()/100.0))
+        self.angle_label[3].setText("EX:" + str(round(self.angle_slider[3].value()/100.0*math.pi,2)))
+        self.angle_label[4].setText("EY:" + str(round(self.angle_slider[4].value()/100.0*math.pi,2)))
+        self.angle_label[5].setText("EZ:" + str(round(self.angle_slider[5].value()/100.0*math.pi,2)))
+
+        X = self.angle_slider[0].value() / 100.0
+        Y = self.angle_slider[1].value() / 100.0
+        Z = self.angle_slider[2].value() / 100.0
+        EX = self.angle_slider[3].value() / 100.0 * math.pi
+        EY = self.angle_slider[4].value() / 100.0 * math.pi
+        EZ = self.angle_slider[5].value() / 100.0 * math.pi
 
 
 rospy.init_node('tf_publisher_gui')
