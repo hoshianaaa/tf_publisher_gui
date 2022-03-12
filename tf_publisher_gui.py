@@ -1,5 +1,7 @@
 # https://touch-sp.hatenablog.com/entry/2021/06/11/230615
 
+from json_read_write import *
+
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
@@ -75,6 +77,12 @@ class Window(QWidget):
 
 rospy.init_node('tf_publisher_gui')
 br = tf.TransformBroadcaster()
+
+args = sys.argv
+file_name = args[1]
+print(file_name)
+data, read_sucess = read_json_file(file_name)
+print(data)
 
 app = QApplication(sys.argv)
 ex =Window()
